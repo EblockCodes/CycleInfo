@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+<head>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>US Map with Red and Green Pins</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <style>
+        /* CSS for making the map container responsive */
+        #map {
+            width: 100%;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script>
+        var map = L.map("map").setView([37.0902, -95.7129], 4); // US center coordinates and zoom level
+
+        // Add a base map layer (OpenStreetMap in this example)
+        L.tileLayer("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        }).addTo(map);
+
+        // Manually defined town names and coordinates for red markers
+        var redLocations = [
+            { name: 'Huntsville, AL', lat: 34.7304, lon: -86.5861 },
+            { name: 'Tuscaloosa, AL', lat: 33.2098, lon: -87.5692 },
+            { name: 'Lakewood, CA', lat: 33.8492, lon: -118.1393 },
+            { name: 'Los Angeles, CA', lat: 34.0522, lon: -118.2437 },
+            { name: 'Salinas, CA', lat: 36.6777, lon: -121.6555 },
+            { name: 'Stockton, CA', lat: 37.9577, lon: -121.2908 },
+            { name: 'Turlock, CA', lat: 37.4947, lon: -120.8466 },
+            { name: 'Upland, CA', lat: 34.0975, lon: -117.6484 },
+            { name: 'Yuba City, CA', lat: 39.1404, lon: -121.6169 },
+            { name: 'Gainesville, FL', lat: 29.6516, lon: -82.3248 },
+            { name: 'Miami, FL', lat: 25.7617, lon: -80.1918 },
+            { name: 'Ocala, FL', lat: 29.1872, lon: -82.1401 },
+            { name: 'Pace, FL', lat: 30.5962, lon: -87.1128 },
+            { name: 'Atlanta, GA', lat: 33.7490, lon: -84.3880 },
+            { name: 'Bowling Green, KY', lat: 36.9903, lon: -86.4436 },
+            { name: 'Hopkinsville, KY', lat: 36.8656, lon: -87.4886 },
+            { name: 'Lexington, KY', lat: 38.0406, lon: -84.5037 },
+            { name: 'Hammond, LA', lat: 30.5044, lon: -90.4617 },
+            { name: 'Westminster, MD', lat: 39.5754, lon: -76.9958 },
+            { name: 'Escanaba, MI', lat: 45.7453, lon: -87.0647 },
+            { name: 'Monroe, MI', lat: 41.9164, lon: -83.3977 },
+            { name: 'Grandview, MO', lat: 38.8858, lon: -94.5330 },
+            { name: 'Warrensburg, MO', lat: 38.7628, lon: -93.7361 },
+            { name: 'Charlotte, NC', lat: 35.2271, lon: -80.8431 },
+            { name: 'Charlotte, NC', lat: 35.2271, lon: -80.8431 },
+            { name: 'Fayetteville, NC', lat: 35.0527, lon: -78.8784 },
+            { name: 'Fayetteville, NC', lat: 35.0527, lon: -78.8784 },
+            { name: 'Bronx, NY', lat: 40.8370, lon: -73.8654 },
+            { name: 'Jamaica, NY', lat: 40.7027, lon: -73.7889 },
+            { name: 'Oklahoma City, OK', lat: 35.4634, lon: -97.5151 },
+            { name: 'Oklahoma City, OK', lat: 35.4634, lon: -97.5151 },
+            { name: 'Yukon, OK', lat: 35.5067, lon: -97.7625 },
+            { name: 'Wilkes Barre, PA', lat: 41.2459, lon: -75.8813 },
+            { name: 'Knoxville, TN', lat: 35.9606, lon: -83.9207 },
+            { name: 'Austin, TX', lat: 30.2672, lon: -97.7431 },
+            { name: 'Cleburne, TX', lat: 32.3475, lon: -97.3867 },
+            { name: 'El Paso, TX', lat: 31.7619, lon: -106.4850 },
+            { name: 'El Paso, TX', lat: 31.7619, lon: -106.4850 },
+            { name: 'Garland, TX', lat: 32.9126, lon: -96.6389 },
+            { name: 'Harker Heights, TX', lat: 31.0857, lon: -97.6592 },
+            { name: 'Katy, TX', lat: 29.7858, lon: -95.8244 },
+            { name: 'McKinney, TX', lat: 33.1972, lon: -96.6398 },
+            { name: 'Manassas, VA', lat: 38.7509, lon: -77.4753 },
+            { name: 'Barboursville, WV', lat: 38.4039, lon: -82.2940 },
+            { name: 'Martinsburg, WV', lat: 39.4562, lon: -77.9639 },
+            { name: 'Gillette, WY', lat: 44.2911, lon: -105.3250 },
+            { name: 'Albuquerque, NM', lat: 35.0844, lon: -106.6504 },
+            { name: "D'Iberville, MS", lat: 30.4269, lon: -88.9210 },
+            { name: 'Hattiesburg, MS', lat: 31.3271, lon: -89.2903 },
+        ];
+
+        // Manually defined town names and coordinates for green markers
+        var greenLocations = [
+            { name: 'Canonsburg, PA', lat: 40.2660, lon: -80.1789 },
+            { name: 'North Syracuse, NY', lat: 43.1324, lon: -76.1302 },
+            { name: 'Burlington, NJ', lat: 40.0772, lon: -74.8516 },
+            { name: 'Oxon Hill, MD', lat: 38.8026, lon: -76.9875 },
+            { name: 'Hanscom AFB, MA', lat: 42.4960, lon: -71.2874 },
+            { name: 'Maxwell-Gunter, AL', lat: 32.3764, lon: -86.2953 },
+            { name: 'Nashville, TN', lat: 36.1627, lon: -86.7816 },
+            { name: 'Melbourne, FL', lat: 28.0836, lon: -80.6081 },
+            { name: 'Moody AFB, GA', lat: 30.9702, lon: -83.1949 },
+            { name: 'Shaw AFB, SC', lat: 33.9723, lon: -80.4693 },
+            { name: 'Wright-Patterson AFB, OH', lat: 39.7806, lon: -84.1102 },
+            { name: 'Clinton Township, MI', lat: 42.5868, lon: -82.9199 },
+            { name: 'Lackland AFB, TX', lat: 29.3859, lon: -98.6180 },
+            { name: 'Scott AFB, IL', lat: 38.5449, lon: -89.9061 },
+            { name: 'Milwaukee, WI', lat: 43.0389, lon: -87.9065 },
+            { name: 'Tinker AFB, OK', lat: 35.4155, lon: -97.3866 },
+            { name: 'McChord AFB, WA', lat: 47.1374, lon: -122.4786 },
+            { name: 'March ARB, CA', lat: 33.8910, lon: -117.2671 },
+            { name: 'McClellan Park, CA', lat: 38.6770, lon: -121.3913 },
+            { name: 'Colorado Springs, CO', lat: 38.8339, lon: -104.8214 },
+            { name: 'Hill AFB, UT', lat: 41.1251, lon: -111.9480 },
+            { name: 'Encino, CA', lat: 34.1519, lon: -118.5215 },
+        ];
+
+        // Function to add markers with custom icons
+        function addMarker(location, markerColor) {
+            var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>`}) }).addTo(map);
+            marker.bindPopup(location.name);
+        }
+
+        // Add red markers
+        for (var i = 0; i < redLocations.length; i++) {
+            addMarker(redLocations[i], 'red');
+        }
+
+        // Add green markers
+        for (var i = 0; i < greenLocations.length; i++) {
+            addMarker(greenLocations[i], 'green');
+        }
+    </script>
+</body>
+</html>
