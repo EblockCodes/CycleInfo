@@ -1,10 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<!DOCTYPE html>
-<html>
-<head>
-    <title>US Map with Red and Green Pins</title>
+    <title>Possible Locations</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -14,10 +11,31 @@
             width: 100%;
             height: 100vh;
         }
+
+        /* Custom CSS to remove the white boxes behind the points */
+        .leaflet-div-icon {
+            background: transparent;
+            border: none;
+        }
+
+        /* Custom CSS for the legend box */
+        .legend-box {
+            background: white;
+            border: 1px solid #ccc;
+            padding: 10px;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 1000;
+        }
     </style>
 </head>
 <body>
     <div id="map"></div>
+    <div class="legend-box">
+        <p><i class="fa fa-map-marker" style="color: red;"></i> Potential Locations (Red Pins)</p>
+        <p><i class="fa fa-map-marker" style="color: green;"></i> Squadrons (Green Pins)</p>
+    </div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script>
         var map = L.map("map").setView([37.0902, -95.7129], 4); // US center coordinates and zoom level
@@ -104,23 +122,45 @@
             { name: 'Colorado Springs, CO', lat: 38.8339, lon: -104.8214 },
             { name: 'Hill AFB, UT', lat: 41.1251, lon: -111.9480 },
             { name: 'Encino, CA', lat: 34.1519, lon: -118.5215 },
-        ];
+            ];
 
-        // Function to add markers with custom icons
-        function addMarker(location, markerColor) {
-            var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>`}) }).addTo(map);
-            marker.bindPopup(location.name);
-        }
+// Function to add markers with custom icons
+function addMarker(location, markerColor) {
+    var locationName = `<strong>${location.name}</strong>`;
+    
+    // Check if the marker is red (has links) and add links accordingly
+    if (markerColor === 'red') {
+        var locationParts = location.name.split(', ');
+        var stateAbbreviation = locationParts[1];
+        var cityFormatted = locationParts[0].toUpperCase().replace(/\s+/g, '-');
+    
+        var zillowLink = `https://www.zillow.com/${cityFormatted}-${stateAbbreviation}/`;
+        var greatSchoolsLink = `https://www.greatschools.org/${stateAbbreviation}/${cityFormatted}/`;
 
-        // Add red markers
-        for (var i = 0; i < redLocations.length; i++) {
-            addMarker(redLocations[i], 'red');
-        }
+        locationName += `
+            <br>
+            <a href="${zillowLink}" target="_blank">Zillow</a>
+            <br>
+            <a href="${greatSchoolsLink}" target="_blank">GreatSchools</a>
+        `;
+    }
 
-        // Add green markers
-        for (var i = 0; i < greenLocations.length; i++) {
-            addMarker(greenLocations[i], 'green');
-        }
-    </script>
+    var popupContent = locationName;
+
+    var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>`}) }).addTo(map);
+
+    marker.bindPopup(popupContent);
+}
+
+// Add red markers
+for (var i = 0; i < redLocations.length; i++) {
+    addMarker(redLocations[i], 'red');
+}
+
+// Add green markers
+for (var i = 0; i < greenLocations.length; i++) {
+    addMarker(greenLocations[i], 'green');
+}
+</script>
 </body>
 </html>
