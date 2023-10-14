@@ -18,34 +18,54 @@
             border: none;
         }
 
-        /* Custom CSS for the legend box */
-        .legend-box {
-            background: white;
-            border: 1px solid #ccc;
-            padding: 10px;
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 1000;
+/* Legend CSS */
+.legend {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background-color: rgba(255, 255, 255, 0.7);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    z-index: 1000; /* Set a higher z-index value */
+}
+
+        .legend-item {
+            margin-bottom: 5px;
+        }
+
+        .legend-icon {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            margin-right: 5px;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
-    <div class="legend-box">
-        <p><i class="fa fa-map-marker" style="color: red;"></i> Potential Locations (Red Pins)</p>
-        <p><i class="fa fa-map-marker" style="color: green;"></i> Squadrons (Green Pins)</p>
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: red;"></div> Locations
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: green;"></div> Squadrons
+        </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script>
-        var map = L.map("map").setView([37.0902, -95.7129], 4); // US center coordinates and zoom level
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADWt3IJ-yevMYVF-BZclS3xWrcJT-b-rsY&libraries=places&callback=initMap"></script>
 
+    <script>
+    // Initialize the map when the Google Maps API is loaded
+    function initMap() {
+        var map = L.map("map").setView([37.0902, -95.7129], 4); // US center coordinates and zoom level
+    
         // Add a base map layer (OpenStreetMap in this example)
         L.tileLayer("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(map);
-
-        // Manually defined town names and coordinates for red markers
+    
+        // Define your red marker data
         var redLocations = [
             { name: 'Huntsville, AL', lat: 34.7304, lon: -86.5861 },
             { name: 'Tuscaloosa, AL', lat: 33.2098, lon: -87.5692 },
@@ -124,16 +144,16 @@
             { name: 'Encino, CA', lat: 34.1519, lon: -118.5215 },
             ];
 
-// Function to add markers with custom icons
+// Function to add markers with custom icons and popups
 function addMarker(location, markerColor) {
     var locationName = `<strong>${location.name}</strong>`;
-    
+
     // Check if the marker is red (has links) and add links accordingly
     if (markerColor === 'red') {
         var locationParts = location.name.split(', ');
         var stateAbbreviation = locationParts[1];
         var cityFormatted = locationParts[0].toUpperCase().replace(/\s+/g, '-');
-    
+
         var zillowLink = `https://www.zillow.com/${cityFormatted}-${stateAbbreviation}/`;
         var greatSchoolsLink = `https://www.greatschools.org/${stateAbbreviation}/${cityFormatted}/`;
 
@@ -146,13 +166,32 @@ function addMarker(location, markerColor) {
     }
 
     var popupContent = locationName;
+    var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({ className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>` }) }).addTo(map);
 
-    var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>`}) }).addTo(map);
+    marker.bindPopup(popupContent); // Add a popup to the marker
 
-    marker.bindPopup(popupContent);
+    if (markerColor === 'red') {
+        calculateDistanceAndTime(marker, location.lat, location.lon);
+    }
 }
 
-// Add red markers
+// Calculate and display distance in the popup
+function calculateDistanceAndTime(marker, lat, lon) {
+    var nearestGreenMarker = findNearestGreenMarker(lat, lon);
+    var redLatLng = L.latLng(lat, lon);
+    var greenLatLng = L.latLng(nearestGreenMarker.lat, nearestGreenMarker.lon);
+
+    var distanceInMeters = redLatLng.distanceTo(greenLatLng);
+    var distanceInMiles = distanceInMeters * 0.000621371; // Convert meters to miles
+
+    var distanceInfo = `<br>Distance to nearest squadron: ${distanceInMiles.toFixed(2)} miles`;
+
+    var existingPopupContent = marker.getPopup().getContent();
+    var updatedPopupContent = existingPopupContent + distanceInfo;
+    marker.getPopup().setContent(updatedPopupContent);
+}
+
+// Add red markers and calculate distance in the popup
 for (var i = 0; i < redLocations.length; i++) {
     addMarker(redLocations[i], 'red');
 }
@@ -160,6 +199,25 @@ for (var i = 0; i < redLocations.length; i++) {
 // Add green markers
 for (var i = 0; i < greenLocations.length; i++) {
     addMarker(greenLocations[i], 'green');
+}
+
+function findNearestGreenMarker(lat, lon) {
+    var nearestMarker = null;
+    var shortestDistance = Infinity;
+
+    for (var i = 0; i < greenLocations.length; i++) {
+        var greenMarker = greenLocations[i];
+        var greenLatLng = L.latLng(greenMarker.lat, greenMarker.lon);
+        var distance = L.latLng(lat, lon).distanceTo(greenLatLng);
+
+        if (distance < shortestDistance) {
+            shortestDistance = distance;
+            nearestMarker = greenMarker;
+        }
+    }
+
+    return nearestMarker;
+}
 }
 </script>
 </body>
