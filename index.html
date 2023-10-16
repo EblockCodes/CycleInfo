@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
     <style>
         /* CSS for making the map container responsive */
         #map {
@@ -18,207 +19,295 @@
             border: none;
         }
 
-/* Legend CSS */
-.legend {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background-color: rgba(255, 255, 255, 0.7);
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    z-index: 1000; /* Set a higher z-index value */
-}
+        /* Improved Legend CSS */
+        .legend {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            z-index: 1000; /* Set a higher z-index value */
+        }
+
+        .legend-title {
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 5px;
+            font-size: 16px;
+        }
 
         .legend-item {
+            display: flex;
+            align-items: center;
             margin-bottom: 5px;
         }
 
         .legend-icon {
-            display: inline-block;
             width: 20px;
             height: 20px;
             margin-right: 5px;
+            border: 1px solid #000; /* Add a border around the icons */
+            border-radius: 50%; /* Make the icons circular */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .legend-text {
+            font-size: 14px;
         }
     </style>
 </head>
 <body>
     <div id="map"></div>
     <div class="legend">
+        <div class="legend-title">Legend</div>
         <div class="legend-item">
-            <div class="legend-icon" style="background-color: red;"></div> Locations
+            <div class="legend-icon" style="background-color: red;">
+                <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
+            </div>
+            <div class="legend-text">Locations</div>
         </div>
         <div class="legend-item">
-            <div class="legend-icon" style="background-color: green;"></div> Squadrons
+            <div class="legend-icon" style="background-color: green;">
+                <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
+            </div>
+            <div class="legend-text">Squadrons</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: blue;">
+                <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
+            </div>
+            <div class="legend-text">MEPS</div>
         </div>
     </div>
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyADWt3IJ-yevMYVF-BZclS3xWrcJT-b-rsY&libraries=places&callback=initMap"></script>
 
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
     <script>
-    // Initialize the map when the Google Maps API is loaded
-    function initMap() {
-        var map = L.map("map").setView([37.0902, -95.7129], 4); // US center coordinates and zoom level
-    
-        // Add a base map layer (OpenStreetMap in this example)
-        L.tileLayer("https://a.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        var map = L.map("map", {
+            maxBounds: [[24.396308, -125.000000], [49.384358, -66.934570]],
+            maxBoundsViscosity: 1.0,
+            minZoom: 5, // Adjust the minimum zoom level
+        }).setView([37.0902, -95.7129], 5);
+
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
         }).addTo(map);
-    
-        // Define your red marker data
+
         var redLocations = [
-            { name: 'Huntsville, AL', lat: 34.7304, lon: -86.5861 },
-            { name: 'Tuscaloosa, AL', lat: 33.2098, lon: -87.5692 },
-            { name: 'Lakewood, CA', lat: 33.8492, lon: -118.1393 },
-            { name: 'Los Angeles, CA', lat: 34.0522, lon: -118.2437 },
-            { name: 'Salinas, CA', lat: 36.6777, lon: -121.6555 },
-            { name: 'Stockton, CA', lat: 37.9577, lon: -121.2908 },
-            { name: 'Turlock, CA', lat: 37.4947, lon: -120.8466 },
-            { name: 'Upland, CA', lat: 34.0975, lon: -117.6484 },
-            { name: 'Yuba City, CA', lat: 39.1404, lon: -121.6169 },
-            { name: 'Gainesville, FL', lat: 29.6516, lon: -82.3248 },
-            { name: 'Miami, FL', lat: 25.7617, lon: -80.1918 },
-            { name: 'Ocala, FL', lat: 29.1872, lon: -82.1401 },
-            { name: 'Pace, FL', lat: 30.5962, lon: -87.1128 },
-            { name: 'Atlanta, GA', lat: 33.7490, lon: -84.3880 },
-            { name: 'Bowling Green, KY', lat: 36.9903, lon: -86.4436 },
-            { name: 'Hopkinsville, KY', lat: 36.8656, lon: -87.4886 },
-            { name: 'Lexington, KY', lat: 38.0406, lon: -84.5037 },
-            { name: 'Hammond, LA', lat: 30.5044, lon: -90.4617 },
-            { name: 'Westminster, MD', lat: 39.5754, lon: -76.9958 },
-            { name: 'Escanaba, MI', lat: 45.7453, lon: -87.0647 },
-            { name: 'Monroe, MI', lat: 41.9164, lon: -83.3977 },
-            { name: 'Grandview, MO', lat: 38.8858, lon: -94.5330 },
-            { name: 'Warrensburg, MO', lat: 38.7628, lon: -93.7361 },
-            { name: 'Charlotte, NC', lat: 35.2271, lon: -80.8431 },
-            { name: 'Charlotte, NC', lat: 35.2271, lon: -80.8431 },
-            { name: 'Fayetteville, NC', lat: 35.0527, lon: -78.8784 },
-            { name: 'Fayetteville, NC', lat: 35.0527, lon: -78.8784 },
-            { name: 'Bronx, NY', lat: 40.8370, lon: -73.8654 },
-            { name: 'Jamaica, NY', lat: 40.7027, lon: -73.7889 },
-            { name: 'Oklahoma City, OK', lat: 35.4634, lon: -97.5151 },
-            { name: 'Oklahoma City, OK', lat: 35.4634, lon: -97.5151 },
-            { name: 'Yukon, OK', lat: 35.5067, lon: -97.7625 },
-            { name: 'Wilkes Barre, PA', lat: 41.2459, lon: -75.8813 },
-            { name: 'Knoxville, TN', lat: 35.9606, lon: -83.9207 },
-            { name: 'Austin, TX', lat: 30.2672, lon: -97.7431 },
-            { name: 'Cleburne, TX', lat: 32.3475, lon: -97.3867 },
-            { name: 'El Paso, TX', lat: 31.7619, lon: -106.4850 },
-            { name: 'El Paso, TX', lat: 31.7619, lon: -106.4850 },
-            { name: 'Garland, TX', lat: 32.9126, lon: -96.6389 },
-            { name: 'Harker Heights, TX', lat: 31.0857, lon: -97.6592 },
-            { name: 'Katy, TX', lat: 29.7858, lon: -95.8244 },
-            { name: 'McKinney, TX', lat: 33.1972, lon: -96.6398 },
-            { name: 'Manassas, VA', lat: 38.7509, lon: -77.4753 },
-            { name: 'Barboursville, WV', lat: 38.4039, lon: -82.2940 },
-            { name: 'Martinsburg, WV', lat: 39.4562, lon: -77.9639 },
-            { name: 'Gillette, WY', lat: 44.2911, lon: -105.3250 },
-            { name: 'Albuquerque, NM', lat: 35.0844, lon: -106.6504 },
-            { name: "D'Iberville, MS", lat: 30.4269, lon: -88.9210 },
-            { name: 'Hattiesburg, MS', lat: 31.3271, lon: -89.2903 },
+    { name: 'Huntsville, AL', lat: 34.7304, lon: -86.5861 },
+    { name: 'Tuscaloosa, AL', lat: 33.2098, lon: -87.5692 },
+    { name: 'Lakewood, CA', lat: 33.8492, lon: -118.1393 },
+    { name: 'Los Angeles, CA', lat: 34.0522, lon: -118.2437 },
+    { name: 'Salinas, CA', lat: 36.6777, lon: -121.6555 },
+    { name: 'Stockton, CA', lat: 37.9577, lon: -121.2908 },
+    { name: 'Turlock, CA', lat: 37.4947, lon: -120.8466 },
+    { name: 'Upland, CA', lat: 34.0975, lon: -117.6484 },
+    { name: 'Yuba City, CA', lat: 39.1404, lon: -121.6169 },
+    { name: 'Gainesville, FL', lat: 29.6516, lon: -82.3248 },
+    { name: 'Miami, FL', lat: 25.7617, lon: -80.1918 },
+    { name: 'Ocala, FL', lat: 29.1872, lon: -82.1401 },
+    { name: 'Pace, FL', lat: 30.5962, lon: -87.1128 },
+    { name: 'Atlanta, GA', lat: 33.7490, lon: -84.3880 },
+    { name: 'Bowling Green, KY', lat: 36.9903, lon: -86.4436 },
+    { name: 'Hopkinsville, KY', lat: 36.8656, lon: -87.4886 },
+    { name: 'Lexington, KY', lat: 38.0406, lon: -84.5037 },
+    { name: 'Hammond, LA', lat: 30.5044, lon: -90.4617 },
+    { name: 'Westminster, MD', lat: 39.5754, lon: -76.9958 },
+    { name: 'Escanaba, MI', lat: 45.7453, lon: -87.0647 },
+    { name: 'Monroe, MI', lat: 41.9164, lon: -83.3977 },
+    { name: 'Grandview, MO', lat: 38.8858, lon: -94.5330 },
+    { name: 'Warrensburg, MO', lat: 38.7628, lon: -93.7361 },
+    { name: 'Charlotte, NC', lat: 35.2270, lon: -80.8431 },
+    { name: 'Charlotte, NC', lat: 35.2271, lon: -80.8431 },
+    { name: 'Fayetteville, NC', lat: 35.0526, lon: -78.8784 },
+    { name: 'Fayetteville, NC', lat: 35.0527, lon: -78.8784 },
+    { name: 'Bronx, NY', lat: 40.8370, lon: -73.8654 },
+    { name: 'Jamaica, NY', lat: 40.7027, lon: -73.7889 },
+    { name: 'Oklahoma City, OK', lat: 35.4635, lon: -97.5151 },
+    { name: 'Oklahoma City, OK', lat: 35.4634, lon: -97.5151 },
+    { name: 'Yukon, OK', lat: 35.5067, lon: -97.7625 },
+    { name: 'Wilkes Barre, PA', lat: 41.2459, lon: -75.8813 },
+    { name: 'Knoxville, TN', lat: 35.9606, lon: -83.9207 },
+    { name: 'Austin, TX', lat: 30.2672, lon: -97.7431 },
+    { name: 'Cleburne, TX', lat: 32.3475, lon: -97.3867 },
+    { name: 'El Paso, TX', lat: 31.7618, lon: -106.4850 },
+    { name: 'El Paso, TX', lat: 31.7619, lon: -106.4850 },
+    { name: 'Garland, TX', lat: 32.9126, lon: -96.6389 },
+    { name: 'Harker Heights, TX', lat: 31.0857, lon: -97.6592 },
+    { name: 'Katy, TX', lat: 29.7858, lon: -95.8244 },
+    { name: 'McKinney, TX', lat: 33.1972, lon: -96.6398 },
+    { name: 'Manassas, VA', lat: 38.7509, lon: -77.4753 },
+    { name: 'Barboursville, WV', lat: 38.4039, lon: -82.2940 },
+    { name: 'Martinsburg, WV', lat: 39.4562, lon: -77.9639 },
+    { name: 'Gillette, WY', lat: 44.2911, lon: -105.3250 },
+    { name: 'Albuquerque, NM', lat: 35.0844, lon: -106.6504 },
+    { name: "D'Iberville, MS", lat: 30.4269, lon: -88.9210 },
+    { name: 'Hattiesburg, MS', lat: 31.3271, lon: -89.2903 },
+];
+
+
+var greenLocations = [
+    { name: 'Canonsburg, PA', lat: 40.2660, lon: -80.1789 },
+    { name: 'North Syracuse, NY', lat: 43.1324, lon: -76.1302 },
+    { name: 'Burlington, NJ', lat: 40.0772, lon: -74.8516 },
+    { name: 'Oxon Hill, MD', lat: 38.8026, lon: -76.9875 },
+    { name: 'Hanscom AFB, MA', lat: 42.4960, lon: -71.2874 },
+    { name: 'Maxwell-Gunter, AL', lat: 32.3764, lon: -86.2953 },
+    { name: 'Nashville, TN', lat: 36.1627, lon: -86.7816 },
+    { name: 'Melbourne, FL', lat: 28.0836, lon: -80.6081 },
+    { name: 'Moody AFB, GA', lat: 30.9702, lon: -83.1949 },
+    { name: 'Shaw AFB, SC', lat: 33.9723, lon: -80.4693 },
+    { name: 'Wright-Patterson AFB, OH', lat: 39.7806, lon: -84.1102 },
+    { name: 'Clinton Township, MI', lat: 42.5868, lon: -82.9199 },
+    { name: 'Lackland AFB, TX', lat: 29.3859, lon: -98.6180 },
+    { name: 'Offutt AFB, NE', lat: 41.1194, lon: -95.9086 },
+    { name: 'Arlington, TX', lat: 32.705, lon: -97.1227 },
+    { name: 'Scott AFB, IL', lat: 38.5449, lon: -89.9061 },
+    { name: 'Milwaukee, WI', lat: 43.0389, lon: -87.9065 },
+    { name: 'Tinker AFB, OK', lat: 35.4155, lon: -97.3866 },
+    { name: 'McChord AFB, WA', lat: 47.1374, lon: -122.4786 },
+    { name: 'March ARB, CA', lat: 33.8910, lon: -117.2671 },
+    { name: 'McClellan Park, CA', lat: 38.6770, lon: -121.3913 },
+    { name: 'Colorado Springs, CO', lat: 38.8339, lon: -104.8214 },
+    { name: 'Hill AFB, UT', lat: 41.1251, lon: -111.9480 },
+    { name: 'Encino, CA', lat: 34.1519, lon: -118.5215 },
+];
+
+
+        // Define your blue marker data
+var blueLocations = [
+    { name: 'MEPS Albany, Georgia', lat: 31.5730, lon: -84.1210 },
+    { name: 'MEPS Albuquerque, New Mexico', lat: 35.0616, lon: -106.7190 },
+    { name: 'MEPS Anchorage, Alaska', lat: 61.2013, lon: -149.8999 },
+    { name: 'MEPS Atlanta, Georgia', lat: 33.7537, lon: -84.3853 },
+    { name: 'MEPS Baltimore, Maryland', lat: 39.2856, lon: -76.6084 },
+    { name: 'MEPS Boston, Massachusetts', lat: 42.3465, lon: -71.0808 },
+    { name: 'MEPS Butte, Montana', lat: 46.0050, lon: -112.5275 },
+    { name: 'MEPS Charlotte, North Carolina', lat: 35.2144, lon: -80.8298 },
+    { name: 'MEPS Chicago, Illinois', lat: 41.8879, lon: -87.6264 },
+    { name: 'MEPS Cincinnati, Ohio', lat: 39.1006, lon: -84.5146 },
+    { name: 'MEPS Cleveland, Ohio', lat: 41.4832, lon: -81.6148 },
+    { name: 'MEPS Columbia, South Carolina', lat: 34.0159, lon: -81.0049 },
+    { name: 'MEPS Dallas, Texas', lat: 32.7701, lon: -96.8367 },
+    { name: 'MEPS Denver, Colorado', lat: 39.7404, lon: -104.9522 },
+    { name: 'MEPS Des Moines, Iowa', lat: 41.5964, lon: -93.6457 },
+    { name: 'MEPS Detroit, Michigan', lat: 42.3554, lon: -83.0477 },
+    { name: 'MEPS Fargo, North Dakota', lat: 46.8676, lon: -96.7782 },
+    { name: 'MEPS Houston, Texas', lat: 29.7478, lon: -95.4006 },
+    { name: 'MEPS Indianapolis, Indiana', lat: 39.7961, lon: -86.1399 },
+    { name: 'MEPS Jacksonville, Florida', lat: 30.3211, lon: -81.6650 },
+    { name: 'MEPS Kansas City, Missouri', lat: 39.0997, lon: -94.5786 },
+    { name: 'MEPS Los Angeles, California', lat: 34.0522, lon: -118.2437 },
+    { name: 'MEPS Louisville, Kentucky', lat: 38.2514, lon: -85.7605 },
+    { name: 'MEPS Madison, Wisconsin', lat: 43.0812, lon: -89.3677 },
+    { name: 'MEPS Memphis, Tennessee', lat: 35.1495, lon: -90.0490 },
+    { name: 'MEPS Miami, Florida', lat: 25.7753, lon: -80.1989 },
+    { name: 'MEPS Milwaukee, Wisconsin', lat: 43.0377, lon: -87.9116 },
+    { name: 'MEPS Minneapolis, Minnesota', lat: 44.9674, lon: -93.2526 },
+    { name: 'MEPS Nashville, Tennessee', lat: 36.1506, lon: -86.7863 },
+    { name: 'MEPS New Orleans, Louisiana', lat: 29.9436, lon: -90.0644 },
+    { name: 'MEPS New York City, New York', lat: 40.7189, lon: -74.0012 },
+    { name: 'MEPS Oklahoma City, Oklahoma', lat: 35.4720, lon: -97.5207 },
+    { name: 'MEPS Omaha, Nebraska', lat: 41.2676, lon: -96.0970 },
+    { name: 'MEPS Philadelphia, Pennsylvania', lat: 39.9376, lon: -75.1516 },
+    { name: 'MEPS Phoenix, Arizona', lat: 33.4495, lon: -112.0701 },
+    { name: 'MEPS Pittsburgh, Pennsylvania', lat: 40.4360, lon: -79.9959 },
+    { name: 'MEPS Portland, Oregon', lat: 45.5076, lon: -122.6782 },
+    { name: 'MEPS Raleigh, North Carolina', lat: 35.7915, lon: -78.7811 },
+    { name: 'MEPS Sacramento, California', lat: 38.5658, lon: -121.4365 },
+    { name: 'MEPS St. Louis, Missouri', lat: 38.6300, lon: -90.2006 },
+    { name: 'MEPS Salt Lake City, Utah', lat: 40.7505, lon: -111.8920 },
+    { name: 'MEPS San Antonio, Texas', lat: 29.4669, lon: -98.4390 },
+    { name: 'MEPS San Diego, California', lat: 32.7281, lon: -117.1611 },
+    { name: 'MEPS San Francisco, California', lat: 37.8088, lon: -122.2749 },
+    { name: 'MEPS Seattle, Washington', lat: 47.6062, lon: -122.3321 },
+    { name: 'MEPS Shreveport, Louisiana', lat: 32.4738, lon: -93.7920 },
+    { name: 'MEPS Tampa, Florida', lat: 27.9516, lon: -82.4595 },
+    { name: 'MEPS Washington, D.C.', lat: 38.8917, lon: -77.0107 }
         ];
 
-        // Manually defined town names and coordinates for green markers
-        var greenLocations = [
-            { name: 'Canonsburg, PA', lat: 40.2660, lon: -80.1789 },
-            { name: 'North Syracuse, NY', lat: 43.1324, lon: -76.1302 },
-            { name: 'Burlington, NJ', lat: 40.0772, lon: -74.8516 },
-            { name: 'Oxon Hill, MD', lat: 38.8026, lon: -76.9875 },
-            { name: 'Hanscom AFB, MA', lat: 42.4960, lon: -71.2874 },
-            { name: 'Maxwell-Gunter, AL', lat: 32.3764, lon: -86.2953 },
-            { name: 'Nashville, TN', lat: 36.1627, lon: -86.7816 },
-            { name: 'Melbourne, FL', lat: 28.0836, lon: -80.6081 },
-            { name: 'Moody AFB, GA', lat: 30.9702, lon: -83.1949 },
-            { name: 'Shaw AFB, SC', lat: 33.9723, lon: -80.4693 },
-            { name: 'Wright-Patterson AFB, OH', lat: 39.7806, lon: -84.1102 },
-            { name: 'Clinton Township, MI', lat: 42.5868, lon: -82.9199 },
-            { name: 'Lackland AFB, TX', lat: 29.3859, lon: -98.6180 },
-            { name: 'Scott AFB, IL', lat: 38.5449, lon: -89.9061 },
-            { name: 'Milwaukee, WI', lat: 43.0389, lon: -87.9065 },
-            { name: 'Tinker AFB, OK', lat: 35.4155, lon: -97.3866 },
-            { name: 'McChord AFB, WA', lat: 47.1374, lon: -122.4786 },
-            { name: 'March ARB, CA', lat: 33.8910, lon: -117.2671 },
-            { name: 'McClellan Park, CA', lat: 38.6770, lon: -121.3913 },
-            { name: 'Colorado Springs, CO', lat: 38.8339, lon: -104.8214 },
-            { name: 'Hill AFB, UT', lat: 41.1251, lon: -111.9480 },
-            { name: 'Encino, CA', lat: 34.1519, lon: -118.5215 },
-            ];
+        // Function to add markers with custom icons and popups
+        function addMarker(location, markerColor) {
+            var locationName = `<strong>${location.name}</strong>`;
 
-// Function to add markers with custom icons and popups
-function addMarker(location, markerColor) {
-    var locationName = `<strong>${location.name}</strong>`;
+            // Check if the marker is red (has links) and add links accordingly
+            if (markerColor === 'red') {
+                var locationParts = location.name.split(', ');
+                var stateAbbreviation = locationParts[1];
+                var cityFormatted = locationParts[0].toUpperCase().replace(/\s+/g, '-');
 
-    // Check if the marker is red (has links) and add links accordingly
-    if (markerColor === 'red') {
-        var locationParts = location.name.split(', ');
-        var stateAbbreviation = locationParts[1];
-        var cityFormatted = locationParts[0].toUpperCase().replace(/\s+/g, '-');
+                var zillowLink = `https://www.zillow.com/${cityFormatted}-${stateAbbreviation}/`;
+                var greatSchoolsLink = `https://www.greatschools.org/${stateAbbreviation}/${cityFormatted}/`;
 
-        var zillowLink = `https://www.zillow.com/${cityFormatted}-${stateAbbreviation}/`;
-        var greatSchoolsLink = `https://www.greatschools.org/${stateAbbreviation}/${cityFormatted}/`;
+                locationName += `
+                    <br>
+                    <a href="${zillowLink}" target="_blank">Zillow</a>
+                    <br>
+                    <a href="${greatSchoolsLink}" target="_blank">GreatSchools</a>
+                `;
 
-        locationName += `
-            <br>
-            <a href="${zillowLink}" target="_blank">Zillow</a>
-            <br>
-            <a href="${greatSchoolsLink}" target="_blank">GreatSchools</a>
-        `;
-    }
+                // Calculate and display distance in the popup
+                locationName += calculateDistanceAndTime(location.lat, location.lon);
+            }
 
-    var popupContent = locationName;
-    var marker = L.marker([location.lat, location.lon], { icon: L.divIcon({ className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>` }) }).addTo(map);
+            var popupContent = locationName;
+            var marker = L.marker([location.lat, location.lon], {
+                icon: L.divIcon({ className: 'leaflet-div-icon', html: `<i style="color: ${markerColor};" class="fa fa-map-marker fa-2x"></i>` })
+            }).addTo(map);
 
-    marker.bindPopup(popupContent); // Add a popup to the marker
-
-    if (markerColor === 'red') {
-        calculateDistanceAndTime(marker, location.lat, location.lon);
-    }
-}
-
-// Calculate and display distance in the popup
-function calculateDistanceAndTime(marker, lat, lon) {
-    var nearestGreenMarker = findNearestGreenMarker(lat, lon);
-    var redLatLng = L.latLng(lat, lon);
-    var greenLatLng = L.latLng(nearestGreenMarker.lat, nearestGreenMarker.lon);
-
-    var distanceInMeters = redLatLng.distanceTo(greenLatLng);
-    var distanceInMiles = distanceInMeters * 0.000621371; // Convert meters to miles
-
-    var distanceInfo = `<br>Distance to nearest squadron: ${distanceInMiles.toFixed(2)} miles`;
-
-    var existingPopupContent = marker.getPopup().getContent();
-    var updatedPopupContent = existingPopupContent + distanceInfo;
-    marker.getPopup().setContent(updatedPopupContent);
-}
-
-// Add red markers and calculate distance in the popup
-for (var i = 0; i < redLocations.length; i++) {
-    addMarker(redLocations[i], 'red');
-}
-
-// Add green markers
-for (var i = 0; i < greenLocations.length; i++) {
-    addMarker(greenLocations[i], 'green');
-}
-
-function findNearestGreenMarker(lat, lon) {
-    var nearestMarker = null;
-    var shortestDistance = Infinity;
-
-    for (var i = 0; i < greenLocations.length; i++) {
-        var greenMarker = greenLocations[i];
-        var greenLatLng = L.latLng(greenMarker.lat, greenMarker.lon);
-        var distance = L.latLng(lat, lon).distanceTo(greenLatLng);
-
-        if (distance < shortestDistance) {
-            shortestDistance = distance;
-            nearestMarker = greenMarker;
+            marker.bindPopup(popupContent); // Add a popup to the marker
         }
-    }
 
-    return nearestMarker;
-}
-}
-</script>
+        // Calculate and return the distance information
+        function calculateDistanceAndTime(lat, lon) {
+            var nearestGreenMarker = findNearestGreenMarker(lat, lon);
+            var redLatLng = L.latLng(lat, lon);
+            var greenLatLng = L.latLng(nearestGreenMarker.lat, nearestGreenMarker.lon);
+
+            var distanceInMeters = redLatLng.distanceTo(greenLatLng);
+            var distanceInMiles = distanceInMeters * 0.000621371; // Convert meters to miles
+
+            var distanceInfo = `<br>Distance to nearest squadron: ${distanceInMiles.toFixed(2)} miles`;
+
+            return distanceInfo;
+        }
+
+        // Add red markers and calculate distance in the popup
+        for (var i = 0; i < redLocations.length; i++) {
+            addMarker(redLocations[i], 'red');
+        }
+
+        // Add green markers
+        for (var i = 0; i < greenLocations.length; i++) {
+            addMarker(greenLocations[i], 'green');
+        }
+
+        // Add blue markers
+        for (var i = 0; i < blueLocations.length; i++) {
+            addMarker(blueLocations[i], 'blue');
+        }
+
+        function findNearestGreenMarker(lat, lon) {
+            var nearestMarker = null;
+            var shortestDistance = Infinity;
+
+            for (var i = 0; i < greenLocations.length; i++) {
+                var greenMarker = greenLocations[i];
+                var greenLatLng = L.latLng(greenMarker.lat, greenMarker.lon);
+                var distance = L.latLng(lat, lon).distanceTo(greenLatLng);
+
+                if (distance < shortestDistance) {
+                    shortestDistance = distance;
+                    nearestMarker = greenMarker;
+                }
+            }
+
+            return nearestMarker;
+        }
+    </script>
 </body>
 </html>
