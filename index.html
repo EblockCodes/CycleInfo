@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Still Updating</title>
+    <title>Possible Locations</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
@@ -47,7 +47,7 @@
         .legend-icon {
             width: 20px;
             height: 20px;
-            margin right: 5px;
+            margin-right: 5px;
             border: 1px solid #000; /* Add a border around the icons */
             border-radius: 50%; /* Make the icons circular */
             display: flex;
@@ -80,17 +80,23 @@
             </div>
             <div class="legend-text">Squadron</div>
         </div>
-        <div class="legend-item">
+        <div class "legend-item">
             <div class="legend-icon" style="background-color: blue;">
                 <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
             </div>
             <div class="legend-text">MEPS</div>
         </div>
-        <div class="legend-item">
+        <div class "legend-item">
             <div class="legend-icon" style="background-color: purple;">
                 <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
             </div>
             <div class="legend-text">Schools</div>
+        </div>
+        <div class="legend-item">
+            <div class="legend-icon" style="background-color: black;">
+                <i class="fa fa-map-marker fa-lg" style="color: white;"></i>
+            </div>
+            <div class="legend-text">Apartments</div>
         </div>
     </div>
 
@@ -101,7 +107,7 @@
             maxBounds: [[24.396308, -125.000000], [49.384358, -66.934570]],
             maxBoundsViscosity: 1.0,
             minZoom: 6,
-        }).setView([33.835, -118.119], 14); // Updated coordinates and zoom level
+        }).setView([33.835, -118.119], 14);
 
         L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
@@ -131,11 +137,16 @@
             { name: 'Cleveland Elementary School', lat: 33.84411565858117, lon: -118.10658474963275, link: 'https://maps.app.goo.gl/rcRcvfLqMFrhXTyK8' }, 
         ];
 
+        // Black locations with a link
+        var blackLocations = [
+            { name: 'The 5800 Apartment Homes', lat: 33.85806675571785, lon: -118.11776482064138, link: 'https://maps.app.goo.gl/ScPEg8rFeZz1MsdJA' },
+            { name: 'Park Montair Apartments', lat: 33.84292501600042, lon: -118.12692046347318, link: 'https://maps.app.goo.gl/KWzLdXKcAUVVoXHb6' },
+        ];
+
         function addMarker(location, markerColor) {
             var locationName = `<strong>${location.name}</strong>`;
 
-            if (markerColor === 'purple') {
-                // Add the link for purple locations
+            if (markerColor === 'purple' || markerColor === 'black') {
                 locationName += `<br><a class="legend-link" href="${location.link}" target="_blank">Google Link</a>`;
             }
 
@@ -162,6 +173,11 @@
         // Add purple markers
         for (var i = 0; i < purpleLocations.length; i++) {
             addMarker(purpleLocations[i], 'purple');
+        }
+
+        // Add black markers
+        for (var i = 0; i < blackLocations.length; i++) {
+            addMarker(blackLocations[i], 'black');
         }
     </script>
 </body>
